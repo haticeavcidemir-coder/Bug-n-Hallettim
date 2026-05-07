@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bugünü Hallettim</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Georgia', serif; background: #F8FCF9; min-height: 100vh; padding: 20px; }
+  .app { max-width: 480px; margin: 0 auto; padding: 20px 0; }
+
+  .header { text-align: center; margin-bottom: 24px; }
+  .header h1 { font-size: 22px; color: #2C4A3E; font-weight: normal; letter-spacing: .02em; }
+  .header p { font-size: 13px; color: #7A8C7E; margin-top: 4px; }
+
+  .day-selector { display: flex; gap: 6px; margin-bottom: 20px; justify-content: center; }
+  .day-btn { width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid #D4E4D8; background: white; font-size: 12px; font-weight: 500; color: #7A8C7E; cursor: pointer; transition: all .2s; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 1px; }
+  .day-btn span { font-size: 9px; }
+  .day-btn.active { background: #2C4A3E; color: white; border-color: #2C4A3E; }
+  .day-btn.done { background: #E8F5E9; border-color: #81C784; color: #2E7D32; }
+
+  .mission-card { background: white; border-radius: 20px; padding: 24px; margin-bottom: 16px; box-shadow: 0 2px 12px rgba(44,74,62,.08); border: 1px solid #E8F0EA; }
+  .mission-label { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: #7A8C7E; margin-bottom: 8px; }
+  .mission-title { font-size: 20px; color: #1A2E25; margin-bottom: 6px; }
+  .mission-sub { font-size: 13px; color: #7A8C7E; line-height: 1.6; }
+
+  .ingredient-row { display: flex; gap: 8px; margin: 16px 0; flex-wrap: wrap; }
+  .ing { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+  .ing-1 { background: #FFF3E0; color: #E65100; }
+  .ing-2 { background: #E8F5E9; color: #2E7D32; }
+  .ing-3 { background: #E3F2FD; color: #1565C0; }
+
+  .steps { margin: 16px 0; }
+  .step { display: flex; gap: 12px; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid #F5F5F5; }
+  .step:last-child { border-bottom: none; }
+  .step-num { width: 24px; height: 24px; border-radius: 50%; background: #F0F7F2; color: #2C4A3E; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .step-text { font-size: 13px; color: #3A3A3A; line-height: 1.6; }
+  .step-time { font-size: 11px; color: #7A8C7E; margin-top: 2px; }
+
+  .timer-row { display: flex; align-items: center; gap: 8px; background: #F8FCF9; border-radius: 12px; padding: 10px 14px; margin: 12px 0; }
+  .timer-icon { font-size: 18px; }
+  .timer-text { font-size: 13px; color: #2C4A3E; font-weight: 500; }
+
+  .complete-btn { width: 100%; padding: 16px; background: #2C4A3E; color: white; border: none; border-radius: 14px; font-size: 15px; font-family: Georgia, serif; cursor: pointer; transition: all .2s; letter-spacing: .02em; }
+  .complete-btn:hover { background: #1A3028; transform: translateY(-1px); }
+  .complete-btn.done { background: #81C784; cursor: default; transform: none; }
+
+  .streak-card { background: linear-gradient(135deg, #2C4A3E, #1A6B4A); border-radius: 20px; padding: 20px 24px; margin-bottom: 16px; color: white; display: flex; align-items: center; justify-content: space-between; }
+  .streak-num { font-size: 42px; font-weight: bold; line-height: 1; }
+  .streak-label { font-size: 12px; opacity: .8; margin-top: 4px; }
+  .streak-right { text-align: right; }
+  .streak-msg { font-size: 13px; opacity: .9; max-width: 160px; text-align: right; line-height: 1.5; }
+
+  .victory-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 100; align-items: center; justify-content: center; }
+  .victory-overlay.show { display: flex; }
+  .victory-box { background: white; border-radius: 24px; padding: 40px 32px; text-align: center; max-width: 300px; animation: pop .3s ease; margin: 20px; }
+  @keyframes pop { from { transform: scale(.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .victory-emoji { font-size: 56px; margin-bottom: 12px; }
+  .victory-title { font-size: 22px; color: #1A2E25; margin-bottom: 8px; }
+  .victory-sub { font-size: 14px; color: #7A8C7E; line-height: 1.6; }
+  .victory-close { margin-top: 20px; padding: 12px 28px; background: #2C4A3E; color: white; border: none; border-radius: 12px; font-size: 14px; cursor: pointer; font-family: Georgia, serif; }
+
+  .reset-btn { display: block; margin: 8px auto 0; background: none; border: none; font-size: 12px; color: #B0BEC5; cursor: pointer; font-family: Georgia, serif; }
+  .reset-btn:hover { color: #7A8C7E; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <h1>Bugünü Hallettim ✓</h1>
+    <p>Yemek yapmıyorsun — birleştiriyorsun.</p>
+  </div>
+
+  <div class="streak-card">
+    <div>
+      <div class="streak-num" id="streakNum">0</div>
+      <div class="streak-label">günlük seri 🔥</div>
+    </div>
+    <div class="streak-right">
+      <div class="streak-msg" id="streakMsg">İlk gününe hoş geldin. Küçük bir adım at.</div>
+    </div>
+  </div>
+
+  <div class="day-selector">
+    <div class="day-btn active" onclick="selectDay(0)" id="d0">Pzt<span>🐟</span></div>
+    <div class="day-btn" onclick="selectDay(1)" id="d1">Sal<span>🍗</span></div>
+    <div class="day-btn" onclick="selectDay(2)" id="d2">Çar<span>🐟</span></div>
+    <div class="day-btn" onclick="selectDay(3)" id="d3">Per<span>🫘</span></div>
+    <div class="day-btn" onclick="selectDay(4)" id="d4">Cum<span>🥩</span></div>
+  </div>
+
+  <div class="mission-card">
+    <div class="mission-label">Bugünün görevi</div>
+    <div class="mission-title" id="missionTitle"></div>
+    <div class="mission-sub" id="missionSub"></div>
+    <div class="ingredient-row" id="ingredients"></div>
+    <div class="steps" id="steps"></div>
+    <div class="timer-row">
+      <div class="timer-icon">⏱</div>
+      <div class="timer-text" id="timerText"></div>
+    </div>
+    <button class="complete-btn" id="completeBtn" onclick="complete()">
+      Bugünü Hallettim ✓
+    </button>
+  </div>
+
+  <button class="reset-btn" onclick="reset()">Haftayı sıfırla</button>
+
+</div>
+
+<div class="victory-overlay" id="victory">
+  <div class="victory-box">
+    <div class="victory-emoji" id="victoryEmoji">🎯</div>
+    <div class="victory-title" id="victoryTitle">Hallettim!</div>
+    <div class="victory-sub" id="victorySub"></div>
+    <button class="victory-close" onclick="closeVictory()">Devam et →</button>
+  </div>
+</div>
+
+<script>
+const days = [
+  {
+    emoji:'🐟', title:'Balık Gecesi',
+    sub:'En kolay akşam yemeği. Fırını aç, balığı koy, unut.',
+    ings:[{label:'Donmuş balık',cls:'ing-1'},{label:'Zeytinyağı + limon',cls:'ing-2'},{label:'Brokoli',cls:'ing-3'}],
+    steps:[
+      {n:1,text:'Balığı buzluktan çıkar, tepsiye koy',time:'1 dk'},
+      {n:2,text:'Zeytinyağı + limon + tuz — üzerine dök',time:'1 dk'},
+      {n:3,text:'Fırın 200 derece, 20 dk — sen dinlen',time:'20 dk'},
+      {n:4,text:'Brokoli buharda 5 dk — bitti',time:'5 dk'}
+    ],
+    timer:'25 dakika · aktif iş: 3 dakika',
+    victory:{emoji:'🐟',title:'Balık gecesi tamamlandı!',sub:'Omega-3, D vitamini, antiinflamatuar. Vücudun teşekkür eder.'}
+  },
+  {
+    emoji:'🍗', title:'Tavuk Saatı',
+    sub:'Sabah marine et, akşam sadece tavayı aç.',
+    ings:[{label:'Tavuk göğsü',cls:'ing-1'},{label:'Donmuş sebze',cls:'ing-2'},{label:'Yoğurt',cls:'ing-3'}],
+    steps:[
+      {n:1,text:'Tavuğu dilimlere kes, zeytinyağı + zerdeçal + tuz',time:'2 dk'},
+      {n:2,text:'Tavayı ısıt, tavuğu koy — karıştırma, bekle',time:'5 dk'},
+      {n:3,text:'Çevir, 5 dk daha — altın rengi olsun',time:'5 dk'},
+      {n:4,text:'Donmuş sebzeyi aynı tavaya fırlat, 3 dk',time:'3 dk'}
+    ],
+    timer:'15 dakika · aktif iş: 5 dakika',
+    victory:{emoji:'🍗',title:'Tavuk saatı tamamlandı!',sub:'Protein, B12, çinko. Hızlı ve gerçek.'}
+  },
+  {
+    emoji:'🐟', title:'Buğulama Gecesi',
+    sub:'Tencereye su, üstüne balık, kapak kapat. Hepsi bu.',
+    ings:[{label:'Donmuş balık',cls:'ing-1'},{label:'Limon + dereotu',cls:'ing-2'},{label:'Haşlanmış patates',cls:'ing-3'}],
+    steps:[
+      {n:1,text:'Tencereye 2 parmak su, kaynat',time:'3 dk'},
+      {n:2,text:'Balığı koy, limon dilimleri üstüne',time:'1 dk'},
+      {n:3,text:'Kapağı kapat, 15 dk — dokunma',time:'15 dk'},
+      {n:4,text:'Dereotu serp, tabağa al',time:'1 dk'}
+    ],
+    timer:'20 dakika · aktif iş: 2 dakika',
+    victory:{emoji:'✨',title:'Buğulama tamamlandı!',sub:'En az iş, en çok kazanım. Ustaca.'}
+  },
+  {
+    emoji:'🫘', title:'Baklagil Günü',
+    sub:'Konserve aç, yıka, birleştir. Yemek yapmak bu kadar basit.',
+    ings:[{label:'Konserve nohut',cls:'ing-1'},{label:'Domates + maydanoz',cls:'ing-2'},{label:'Zeytinyağı + limon',cls:'ing-3'}],
+    steps:[
+      {n:1,text:'Konserve nohut aç, süzgeçten geçir, yıka',time:'1 dk'},
+      {n:2,text:'Domates + maydanoz iri doğra',time:'2 dk'},
+      {n:3,text:'Hepsini kaseye at, zeytinyağı + limon',time:'1 dk'},
+      {n:4,text:'Yanına yoğurt, üstüne pul biber — bitti',time:'1 dk'}
+    ],
+    timer:'5 dakika · aktif iş: 5 dakika',
+    victory:{emoji:'🫘',title:'Baklagil günü tamamlandı!',sub:'Bağırsak florası sevinçten dans ediyor.'}
+  },
+  {
+    emoji:'🥩', title:'Kıyma Gecesi',
+    sub:'Kıyma buzluktan, tava sıcak, 10 dakika.',
+    ings:[{label:'Kıyma / köfte',cls:'ing-1'},{label:'Donmuş sebze',cls:'ing-2'},{label:'Yoğurt',cls:'ing-3'}],
+    steps:[
+      {n:1,text:'Kıymayı tavaya koy, karıştır — su çıkar bekle',time:'3 dk'},
+      {n:2,text:'Su çekilince zeytinyağı + soğan + baharatlar',time:'4 dk'},
+      {n:3,text:'Donmuş sebzeyi yan yana koy, 3 dk',time:'3 dk'},
+      {n:4,text:'Yanında yoğurt, üstüne pul biber',time:'1 dk'}
+    ],
+    timer:'12 dakika · aktif iş: 8 dakika',
+    victory:{emoji:'🥩',title:'Kıyma gecesi tamamlandı!',sub:'Demir, B12, çinko. Haftanın en besleyici öğünü.'}
+  }
+];
+
+let currentDay = 0;
+let completed = JSON.parse(localStorage.getItem('completed') || '[false,false,false,false,false]');
+let streak = completed.filter(Boolean).length;
+
+function selectDay(i) {
+  currentDay = i;
+  document.querySelectorAll('.day-btn').forEach((b,j) => {
+    b.classList.toggle('active', j===i && !completed[j]);
+    b.classList.toggle('done', completed[j]);
+  });
+  render();
+}
+
+function render() {
+  const d = days[currentDay];
+  document.getElementById('missionTitle').textContent = d.title;
+  document.getElementById('missionSub').textContent = d.sub;
+  document.getElementById('timerText').textContent = 'Toplam süre: ' + d.timer;
+  document.getElementById('streakNum').textContent = streak;
+
+  const msgs = ['İlk gününe hoş geldin. Küçük bir adım at.','İlk adım atıldı. 🌱','İki gün üst üste. Ritim kuruluyor.','Üç gün. Alışkanlık başlıyor.','Dört gün. Vücut farkı hissediyor.','Beş gün. Hallettim. ✓'];
+  document.getElementById('streakMsg').textContent = msgs[streak] || msgs[0];
+
+  document.getElementById('ingredients').innerHTML = d.ings.map(i =>
+    `<div class="ing ${i.cls}">${i.label}</div>`).join('');
+
+  document.getElementById('steps').innerHTML = d.steps.map(s =>
+    `<div class="step">
+      <div class="step-num">${s.n}</div>
+      <div>
+        <div class="step-text">${s.text}</div>
+        <div class="step-time">${s.time}</div>
+      </div>
+    </div>`).join('');
+
+  const btn = document.getElementById('completeBtn');
+  if (completed[currentDay]) {
+    btn.textContent = '✓ Tamamlandı';
+    btn.classList.add('done');
+  } else {
+    btn.textContent = 'Bugünü Hallettim ✓';
+    btn.classList.remove('done');
+  }
+
+  document.querySelectorAll('.day-btn').forEach((b,j) => {
+    b.classList.remove('active','done');
+    if (completed[j]) b.classList.add('done');
+    else if (j===currentDay) b.classList.add('active');
+  });
+}
+
+function complete() {
+  if (completed[currentDay]) return;
+  completed[currentDay] = true;
+  streak = completed.filter(Boolean).length;
+  localStorage.setItem('completed', JSON.stringify(completed));
+
+  const v = days[currentDay].victory;
+  document.getElementById('victoryEmoji').textContent = v.emoji;
+  document.getElementById('victoryTitle').textContent = v.title;
+  document.getElementById('victorySub').textContent = v.sub;
+  document.getElementById('victory').classList.add('show');
+  render();
+}
+
+function closeVictory() {
+  document.getElementById('victory').classList.remove('show');
+  if (currentDay < 4) selectDay(currentDay + 1);
+}
+
+function reset() {
+  completed = [false,false,false,false,false];
+  streak = 0;
+  localStorage.setItem('completed', JSON.stringify(completed));
+  selectDay(0);
+}
+
+render();
+</script>
+</body>
+</html>
